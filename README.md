@@ -143,15 +143,15 @@ app/
 ├── DTOs/                   # Custom typed DTOs
 ├── Http/
 │   ├── Controllers/Api/    # Versioned controllers
-│   ├── Requests/           # Validation layer
-│   └── Resources/          # API Resources
+│   ├── Requests/Api/       # Validation layer
+│   └── Resources/Api/      # API Resources
 ├── Models/
 ├── Providers/
 ├── Traits/                 # ApiResponse, helpers
 └── Exceptions/
 
 routes/
-├── api.php
+├── api.php                 # Main entry point, version grouping
 └── api/
     └── v1.php
 
@@ -260,6 +260,7 @@ Retry-After
 
 * `force.json`
 * `log.api`
+* `auth:sanctum`
 * `verified`
 
 Reusable and composable per route group.
