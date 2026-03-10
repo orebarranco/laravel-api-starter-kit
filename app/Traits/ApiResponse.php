@@ -11,6 +11,17 @@ use Symfony\Component\HttpFoundation\Response;
 
 trait ApiResponse
 {
+    /**
+     * @return array{version: mixed, timestamp: string}
+     */
+    public function baseMeta(): array
+    {
+        return [
+            'version' => request()->attributes->get('api_version', 'v1'),
+            'timestamp' => now()->toIso8601String(),
+        ];
+    }
+
     protected function success(mixed $data, string $message = 'OK', int $status = Response::HTTP_OK): JsonResponse
     {
         return response()->json([
@@ -50,6 +61,23 @@ trait ApiResponse
         ]);
     }
 
+    /**
+     * @param  array<string, mixed>  $errors
+     */
+    protected function validationError(array $errors, string $message = 'The given data was invalid.'): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => $message,
+            'error' => [
+                'code' => 'VALIDATION_ERROR',
+                'detail' => 'Check the errors field for more information.',
+                'errors' => $errors,
+            ],
+            'meta' => $this->baseMeta(),
+        ], Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
     protected function error(string $message, string $code, string $detail = '', int $status = Response::HTTP_BAD_REQUEST): JsonResponse
     {
         return response()->json([
@@ -61,16 +89,5 @@ trait ApiResponse
             ],
             'meta' => $this->baseMeta(),
         ], $status);
-    }
-
-    /**
-     * @return array{version: mixed, timestamp: string}
-     */
-    private function baseMeta(): array
-    {
-        return [
-            'version' => request()->attributes->get('api_version', 'v1'),
-            'timestamp' => now()->toIso8601String(),
-        ];
     }
 }
