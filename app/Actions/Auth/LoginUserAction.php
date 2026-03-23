@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Actions\Auth;
 
 use App\DTOs\Auth\LoginUserDTO;
+use App\Exceptions\Auth\InvalidCredentialsException;
 use App\Models\User;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Hash;
 
 final class LoginUserAction
@@ -14,7 +14,7 @@ final class LoginUserAction
     /**
      * @return array{user: User, token: string}
      *
-     * @throws AuthenticationException
+     * @throws InvalidCredentialsException
      */
     public function execute(LoginUserDTO $data): array
     {
@@ -22,7 +22,7 @@ final class LoginUserAction
         $user = User::query()->where('email', $data->email)->first();
 
         if (! $user || ! Hash::check($data->password, $user->password)) {
-            throw new AuthenticationException('These credentials do not match our records.');
+            throw new InvalidCredentialsException();
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;

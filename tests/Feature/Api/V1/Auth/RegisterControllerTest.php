@@ -36,7 +36,7 @@ it('registers a new user successfully', function (): void {
 it('fails registration with invalid data', function (array $payload, string|array $errors): void {
     $this->postJson($this->endpoint, array_merge($this->validPayload, $payload))
         ->assertUnprocessable()
-        ->assertJsonValidationErrors($errors);
+        ->assertJsonValidationErrors($errors, 'error.errors');
 })->with([
     'missing name' => [['name' => ''], 'name'],
     'name too long' => [['name' => Str::random(256)], 'name'],
@@ -53,7 +53,7 @@ it('fails registration if email is already taken', function (): void {
 
     $this->postJson($this->endpoint, array_merge($this->validPayload, ['email' => 'taken@example.com']))
         ->assertUnprocessable()
-        ->assertJsonValidationErrors('email');
+        ->assertJsonValidationErrors('email', 'error.errors');
 });
 
 it('does not include sensitive information in response', function (): void {

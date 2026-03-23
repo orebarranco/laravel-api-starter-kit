@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use App\Actions\Auth\LoginUserAction;
 use App\DTOs\Auth\LoginUserDTO;
+use App\Exceptions\Auth\InvalidCredentialsException;
 use App\Models\User;
-use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Hash;
 
 beforeEach(function (): void {
@@ -45,7 +45,7 @@ it('throws an exception with incorrect email', function (): void {
     );
 
     $this->action->execute($dto);
-})->throws(AuthenticationException::class);
+})->throws(InvalidCredentialsException::class);
 
 it('throws an exception with incorrect password', function (): void {
     User::factory()->create([
@@ -59,4 +59,4 @@ it('throws an exception with incorrect password', function (): void {
     );
 
     $this->action->execute($dto);
-})->throws(AuthenticationException::class);
+})->throws(InvalidCredentialsException::class);

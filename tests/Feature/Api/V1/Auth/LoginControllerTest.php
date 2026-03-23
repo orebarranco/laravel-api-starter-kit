@@ -42,8 +42,8 @@ it('fails login with invalid credentials', function (): void {
 
     $response->assertStatus(Response::HTTP_UNAUTHORIZED)
         ->assertJsonPath('success', false)
-        ->assertJsonPath('message', 'These credentials do not match our records.')
-        ->assertJsonPath('error.code', 'UNAUTHORIZED');
+        ->assertJsonPath('message', 'The provided credentials are incorrect.')
+        ->assertJsonPath('error.code', 'INVALID_CREDENTIALS');
 });
 
 it('fails login with non-existent email', function (): void {
@@ -56,13 +56,13 @@ it('fails login with non-existent email', function (): void {
 
     $response->assertStatus(Response::HTTP_UNAUTHORIZED)
         ->assertJsonPath('success', false)
-        ->assertJsonPath('message', __('auth.failed'));
+        ->assertJsonPath('message', 'The provided credentials are incorrect.');
 });
 
 it('fails login with validation errors', function (array $payload, string $field): void {
     $this->postJson($this->endpoint, $payload)
         ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-        ->assertJsonValidationErrors($field);
+        ->assertJsonValidationErrors($field, 'error.errors');
 })->with([
     'missing email' => [['email' => '', 'password' => 'password'], 'email'],
     'invalid email' => [['email' => 'not-an-email', 'password' => 'password'], 'email'],
