@@ -27,6 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(
-            fn (Throwable $e): JsonResponse => app(ApiExceptionHandler::class)->render($e)
+            fn (Throwable $e): JsonResponse => resolve(ApiExceptionHandler::class)->render($e)
         );
     })->create();
