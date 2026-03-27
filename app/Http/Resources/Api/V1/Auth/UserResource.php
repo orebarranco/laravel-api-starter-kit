@@ -5,23 +5,29 @@ declare(strict_types=1);
 namespace App\Http\Resources\Api\V1\Auth;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 
 /**
  * @property-read User $resource
  */
-final class UserResource extends JsonResource
+final class UserResource extends JsonApiResource
 {
     /**
-     * @return array{id: string, name: string, email: string}
+     * The resource's attributes.
+     *
+     * @var list<string>
      */
-    public function toArray(Request $request): array
-    {
-        return [
-            'id' => $this->resource->id,
-            'name' => $this->resource->name,
-            'email' => $this->resource->email,
-        ];
-    }
+    public array $attributes = [
+        'name',
+        'email',
+    ];
+
+    /**
+     * The resource's relationships.
+     *
+     * @var list<string>
+     */
+    public array $relationships = [
+        // ...
+    ];
 }

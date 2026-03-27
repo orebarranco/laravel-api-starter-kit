@@ -16,9 +16,7 @@ final class MeController
     public function __invoke(Request $request): JsonResponse
     {
         return $this->success(
-            data: [
-                'user' => new UserResource($request->user()),
-            ],
+            data: new UserResource($request->user()),
             message: 'User profile retrieved'
         );
     }

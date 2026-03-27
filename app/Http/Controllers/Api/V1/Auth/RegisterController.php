@@ -20,12 +20,10 @@ final class RegisterController
         $result = $action->execute($request->toDto());
 
         return $this->success(
-            data: [
-                'user' => new UserResource($result['user']),
-                'token' => $result['token'],
-            ],
+            data: new UserResource($result['user']),
             message: 'User registered successfully',
-            status: Response::HTTP_CREATED
+            status: Response::HTTP_CREATED,
+            meta: ['token' => $result['token']]
         );
     }
 }

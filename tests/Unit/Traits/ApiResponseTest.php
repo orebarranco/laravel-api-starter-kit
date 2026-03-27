@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Traits;
 
+use App\Http\Resources\Api\V1\Auth\UserResource;
+use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -41,6 +43,20 @@ it('successCollection returns paginated response with correct structure', functi
             'last_page' => 4,
         ])
         ->and($response->getData(true)['links'])->toHaveKeys(['self', 'first', 'prev', 'next', 'last']);
+});
+
+it('successCollection resolves JSON:API resource objects correctly', function (): void {
+    $users = User::factory()->count(2)->make();
+    $paginator = new LengthAwarePaginator($users, 2, 15, 1, ['path' => 'http://localhost/api/v1/users']);
+    $collection = UserResource::collection($paginator);
+
+    $response = $this->subject->callSuccessCollection($collection, 'Listed successfully');
+    $data = $response->getData(true);
+
+    expect($data['success'])->toBeTrue()
+        ->and($data['data'])->toBeArray()->toHaveCount(2)
+        ->and($data['data'][0])->toHaveKeys(['id', 'type', 'attributes'])
+        ->and($data['data'][0]['type'])->toBe('users');
 });
 
 it('successCollection uses default message when none provided', function (): void {

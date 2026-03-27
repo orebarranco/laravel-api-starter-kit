@@ -23,10 +23,10 @@ it('registers a new user successfully', function (): void {
 
     $response->assertStatus(Response::HTTP_CREATED)
         ->assertJsonPath('success', true)
-        ->assertJsonPath('data.user.name', $this->validPayload['name'])
-        ->assertJsonPath('data.user.email', $this->validPayload['email']);
+        ->assertJsonPath('data.attributes.name', $this->validPayload['name'])
+        ->assertJsonPath('data.attributes.email', $this->validPayload['email']);
 
-    expect($response->json('data.token'))->toBeString()->not->toBeEmpty();
+    expect($response->json('meta.token'))->toBeString()->not->toBeEmpty();
 
     $this->assertDatabaseHas('users', [
         'email' => $this->validPayload['email'],
@@ -61,5 +61,5 @@ it('does not include sensitive information in response', function (): void {
 
     $response->assertStatus(Response::HTTP_CREATED);
 
-    expect($response->json('data.user'))->not->toHaveKeys(['password', 'remember_token']);
+    expect($response->json('data.attributes'))->not->toHaveKeys(['password', 'remember_token']);
 });

@@ -6,7 +6,10 @@ namespace App\Traits;
 
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Resources\JsonApi\AnonymousResourceCollection as JsonApiResourceCollection;
+use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
 
 trait ApiResponse
@@ -22,13 +25,20 @@ trait ApiResponse
         ];
     }
 
-    protected function success(mixed $data, string $message = 'OK', int $status = Response::HTTP_OK): JsonResponse
+    /**
+     * @param  array<string, mixed>  $meta
+     */
+    protected function success(mixed $data, string $message = 'OK', int $status = Response::HTTP_OK, array $meta = []): JsonResponse
     {
+        if ($data instanceof JsonApiResource) {
+            $data = $data->resolve()['data'];
+        }
+
         return response()->json([
             'success' => true,
             'message' => $message,
             'data' => $data,
-            'meta' => $this->baseMeta(),
+            'meta' => array_merge($this->baseMeta(), $meta),
         ], $status);
     }
 
@@ -37,10 +47,18 @@ trait ApiResponse
         /** @var LengthAwarePaginator<int, mixed> $paginator */
         $paginator = $collection->resource;
 
+        if ($collection instanceof JsonApiResourceCollection) {
+            /** @var Collection<int, JsonApiResource> $items */
+            $items = $collection->collection;
+            $data = $items->map(fn (JsonApiResource $resource) => $resource->resolve()['data'])->values()->all();
+        } else {
+            $data = $collection->toArray(request());
+        }
+
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data' => $collection->toArray(request()),
+            'data' => $data,
             'meta' => array_merge($this->baseMeta(), [
                 'pagination' => [
                     'total' => $paginator->total(),

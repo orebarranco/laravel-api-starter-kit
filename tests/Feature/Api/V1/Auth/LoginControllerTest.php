@@ -27,9 +27,9 @@ it('logs in a user successfully with valid credentials', function (): void {
     $response->assertStatus(Response::HTTP_OK)
         ->assertJsonPath('success', true)
         ->assertJsonPath('message', 'Login successful')
-        ->assertJsonPath('data.user.email', $this->user->email);
+        ->assertJsonPath('data.attributes.email', $this->user->email);
 
-    expect($response->json('data.token'))->toBeString()->not->toBeEmpty();
+    expect($response->json('meta.token'))->toBeString()->not->toBeEmpty();
 });
 
 it('fails login with invalid credentials', function (): void {
