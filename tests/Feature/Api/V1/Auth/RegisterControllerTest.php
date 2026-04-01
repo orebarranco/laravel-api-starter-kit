@@ -22,7 +22,7 @@ it('registers a new user successfully', function (): void {
     $response = $this->postJson($this->endpoint, $this->validPayload);
 
     $response->assertStatus(Response::HTTP_CREATED)
-        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.type', 'users')
         ->assertJsonPath('data.attributes.name', $this->validPayload['name'])
         ->assertJsonPath('data.attributes.email', $this->validPayload['email']);
 
@@ -33,10 +33,16 @@ it('registers a new user successfully', function (): void {
     ]);
 });
 
-it('fails registration with invalid data', function (array $payload, string|array $errors): void {
-    $this->postJson($this->endpoint, array_merge($this->validPayload, $payload))
+it('fails registration with invalid data', function (array $payload, string|array $fields): void {
+    $fields = (array) $fields;
+
+    $response = $this->postJson($this->endpoint, array_merge($this->validPayload, $payload))
         ->assertUnprocessable()
-        ->assertJsonValidationErrors($errors, 'error.errors');
+        ->assertJsonPath('errors.0.code', 'VALIDATION_ERROR');
+
+    foreach ($fields as $field) {
+        $response->assertJsonFragment(['source' => ['pointer' => '/data/attributes/'.$field]]);
+    }
 })->with([
     'missing name' => [['name' => ''], 'name'],
     'name too long' => [['name' => Str::random(256)], 'name'],
@@ -53,7 +59,7 @@ it('fails registration if email is already taken', function (): void {
 
     $this->postJson($this->endpoint, array_merge($this->validPayload, ['email' => 'taken@example.com']))
         ->assertUnprocessable()
-        ->assertJsonValidationErrors('email', 'error.errors');
+        ->assertJsonFragment(['source' => ['pointer' => '/data/attributes/email']]);
 });
 
 it('does not include sensitive information in response', function (): void {

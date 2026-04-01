@@ -17,7 +17,7 @@ final class ForceJsonResponse
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $request->headers->set('Accept', 'application/json');
+        $request->headers->set('Accept', 'application/vnd.api+json');
 
         return $next($request);
     }

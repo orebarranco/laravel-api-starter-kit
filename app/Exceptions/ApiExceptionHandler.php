@@ -38,10 +38,7 @@ final class ApiExceptionHandler
 
     private function handleValidation(ValidationException $e): JsonResponse
     {
-        /** @var array<string, mixed> $errors */
-        $errors = $e->errors();
-
-        return $this->validationError($errors, $e->getMessage());
+        return $this->validationError($e->errors(), $e->getMessage());
     }
 
     private function handleInvalidCredentials(InvalidCredentialsException $e): JsonResponse
@@ -99,7 +96,7 @@ final class ApiExceptionHandler
         return $this->error(
             message: $e->getMessage() ?: 'HTTP Error.',
             code: 'HTTP_ERROR',
-            detail: $e->getMessage(),
+            detail: $e->getMessage() ?: 'An HTTP error occurred.',
             status: $e->getStatusCode(),
         );
     }

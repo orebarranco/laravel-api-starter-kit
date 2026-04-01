@@ -19,9 +19,8 @@ final class LoginController
         $result = $action->execute($request->toDto());
 
         return $this->success(
-            data: new UserResource($result['user']),
-            message: 'Login successful',
-            meta: ['token' => $result['token']]
+            resource: new UserResource($result['user']),
+            meta: ['token' => $result['token']],
         );
     }
 }

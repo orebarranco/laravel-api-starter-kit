@@ -17,52 +17,43 @@ beforeEach(function (): void {
 });
 
 it('logs in a user successfully with valid credentials', function (): void {
-    $payload = [
+    $response = $this->postJson($this->endpoint, [
         'email' => $this->user->email,
         'password' => $this->password,
-    ];
-
-    $response = $this->postJson($this->endpoint, $payload);
+    ]);
 
     $response->assertStatus(Response::HTTP_OK)
-        ->assertJsonPath('success', true)
-        ->assertJsonPath('message', 'Login successful')
+        ->assertJsonPath('data.type', 'users')
         ->assertJsonPath('data.attributes.email', $this->user->email);
 
     expect($response->json('meta.token'))->toBeString()->not->toBeEmpty();
 });
 
 it('fails login with invalid credentials', function (): void {
-    $payload = [
+    $response = $this->postJson($this->endpoint, [
         'email' => $this->user->email,
         'password' => 'wrong-password',
-    ];
-
-    $response = $this->postJson($this->endpoint, $payload);
+    ]);
 
     $response->assertStatus(Response::HTTP_UNAUTHORIZED)
-        ->assertJsonPath('success', false)
-        ->assertJsonPath('message', 'The provided credentials are incorrect.')
-        ->assertJsonPath('error.code', 'INVALID_CREDENTIALS');
+        ->assertJsonPath('errors.0.code', 'INVALID_CREDENTIALS');
 });
 
 it('fails login with non-existent email', function (): void {
-    $payload = [
+    $response = $this->postJson($this->endpoint, [
         'email' => 'nonexistent@example.com',
         'password' => $this->password,
-    ];
-
-    $response = $this->postJson($this->endpoint, $payload);
+    ]);
 
     $response->assertStatus(Response::HTTP_UNAUTHORIZED)
-        ->assertJsonPath('success', false)
-        ->assertJsonPath('message', 'The provided credentials are incorrect.');
+        ->assertJsonPath('errors.0.code', 'INVALID_CREDENTIALS');
 });
 
 it('fails login with validation errors', function (array $payload, string $field): void {
     $this->postJson($this->endpoint, $payload)
         ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
-        ->assertJsonValidationErrors($field, 'error.errors');
+        ->assertJsonPath('errors.0.code', 'VALIDATION_ERROR')
+        ->assertJsonFragment(['source' => ['pointer' => '/data/attributes/'.$field]]);
 })->with([
     'missing email' => [['email' => '', 'password' => 'password'], 'email'],
     'invalid email' => [['email' => 'not-an-email', 'password' => 'password'], 'email'],

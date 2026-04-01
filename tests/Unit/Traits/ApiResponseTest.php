@@ -8,10 +8,8 @@ use App\Http\Resources\Api\V1\Auth\UserResource;
 use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\JsonApi\AnonymousResourceCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\Response;
 
 beforeEach(function (): void {
@@ -19,30 +17,29 @@ beforeEach(function (): void {
     {
         use ApiResponse;
 
-        public function callSuccessCollection(AnonymousResourceCollection $collection, string $message = 'OK'): JsonResponse
+        public function callSuccessCollection(AnonymousResourceCollection $collection, int $status = Response::HTTP_OK): JsonResponse
         {
-            return $this->successCollection($collection, $message);
+            return $this->successCollection($collection, $status);
         }
     };
 });
 
-it('successCollection returns paginated response with correct structure', function (): void {
-    $items = Collection::make([['id' => 1], ['id' => 2], ['id' => 3]]);
-    $paginator = new LengthAwarePaginator($items, 10, 3, 1, ['path' => 'http://localhost/api/v1/items']);
-    $collection = AnonymousResourceCollection::make($paginator, JsonResource::class);
+it('successCollection returns paginated response with JSON:API structure', function (): void {
+    $users = User::factory()->count(3)->make();
+    $paginator = new LengthAwarePaginator($users, 10, 3, 1, ['path' => 'http://localhost/api/v1/users']);
+    $collection = UserResource::collection($paginator);
 
-    $response = $this->subject->callSuccessCollection($collection, 'Listed successfully');
+    $response = $this->subject->callSuccessCollection($collection);
+    $data = $response->getData(true);
 
     expect($response->status())->toBe(Response::HTTP_OK)
-        ->and($response->getData(true)['success'])->toBeTrue()
-        ->and($response->getData(true)['message'])->toBe('Listed successfully')
-        ->and($response->getData(true)['meta']['pagination'])->toMatchArray([
+        ->and($data)->toHaveKeys(['data', 'meta'])
+        ->and($data['meta']['pagination'])->toMatchArray([
             'total' => 10,
             'per_page' => 3,
             'current_page' => 1,
             'last_page' => 4,
-        ])
-        ->and($response->getData(true)['links'])->toHaveKeys(['self', 'first', 'prev', 'next', 'last']);
+        ]);
 });
 
 it('successCollection resolves JSON:API resource objects correctly', function (): void {
@@ -50,21 +47,50 @@ it('successCollection resolves JSON:API resource objects correctly', function ()
     $paginator = new LengthAwarePaginator($users, 2, 15, 1, ['path' => 'http://localhost/api/v1/users']);
     $collection = UserResource::collection($paginator);
 
-    $response = $this->subject->callSuccessCollection($collection, 'Listed successfully');
+    $response = $this->subject->callSuccessCollection($collection);
     $data = $response->getData(true);
 
-    expect($data['success'])->toBeTrue()
-        ->and($data['data'])->toBeArray()->toHaveCount(2)
+    expect($data['data'])->toBeArray()->toHaveCount(2)
         ->and($data['data'][0])->toHaveKeys(['id', 'type', 'attributes'])
         ->and($data['data'][0]['type'])->toBe('users');
 });
 
-it('successCollection uses default message when none provided', function (): void {
-    $items = Collection::make([]);
-    $paginator = new LengthAwarePaginator($items, 0, 15, 1, ['path' => 'http://localhost/api/v1/items']);
-    $collection = AnonymousResourceCollection::make($paginator, JsonResource::class);
+it('successCollection accepts a custom status code', function (): void {
+    $users = User::factory()->count(1)->make();
+    $paginator = new LengthAwarePaginator($users, 1, 15, 1, ['path' => 'http://localhost/api/v1/users']);
+    $collection = UserResource::collection($paginator);
+
+    $response = $this->subject->callSuccessCollection($collection, Response::HTTP_PARTIAL_CONTENT);
+
+    expect($response->status())->toBe(Response::HTTP_PARTIAL_CONTENT);
+});
+
+it('validationError skips non-string messages', function (): void {
+    $subject = new class
+    {
+        use ApiResponse;
+
+        /** @param array<string, mixed> $errors */
+        public function callValidationError(array $errors): JsonResponse
+        {
+            return $this->validationError($errors);
+        }
+    };
+
+    $response = $subject->callValidationError(['email' => [null, 'The email is required.', 42]]);
+    $data = $response->getData(true);
+
+    expect($data['errors'])->toHaveCount(1)
+        ->and($data['errors'][0]['detail'])->toBe('The email is required.');
+});
+
+it('successCollection includes base meta fields', function (): void {
+    $users = User::factory()->count(1)->make();
+    $paginator = new LengthAwarePaginator($users, 1, 15, 1, ['path' => 'http://localhost/api/v1/users']);
+    $collection = UserResource::collection($paginator);
 
     $response = $this->subject->callSuccessCollection($collection);
+    $meta = $response->getData(true)['meta'];
 
-    expect($response->getData(true)['message'])->toBe('OK');
+    expect($meta)->toHaveKeys(['request_id', 'version', 'timestamp', 'pagination']);
 });

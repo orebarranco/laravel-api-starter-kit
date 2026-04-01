@@ -17,7 +17,7 @@ No frontend scaffolding. No Blade. Pure headless API.
 * Business logic inside **Actions**
 * Custom lightweight DTOs (no external DTO packages)
 * Strict typing
-* Consistent JSON responses inspired by JSON:API
+* Strict JSON:API compliant responses
 * Versioned APIs
 
 ---
@@ -29,8 +29,8 @@ No frontend scaffolding. No Blade. Pure headless API.
 * Token authentication via Laravel Sanctum
 * API Versioning (URI-based)
 * Custom typed DTOs (`readonly` PHP classes)
-* JSON:API-inspired resource objects via `JsonApiResource`
-* Standardized JSON response format
+* JSON:API compliant resource objects via `JsonApiResource`
+* Standardized JSON:API response format (`application/vnd.api+json`)
 * Reusable middleware
 * Modern testing with Pest (100% coverage enforced)
 * Static analysis (PHPStan + Larastan)
@@ -103,27 +103,45 @@ routes/api/v1.php
 
 ## Response Format
 
-All responses follow a consistent structure inspired by JSON:API.
+All responses follow the [JSON:API](https://jsonapi.org) specification (`Content-Type: application/vnd.api+json`).
 
 ### Success — single resource
 
 ```json
 {
-  "success": true,
-  "message": "User retrieved successfully",
   "data": {
-    "id": "01HXYZ123ABC",
+    "id": "01kn38s0cv0edq25et3vyrxd7s",
     "type": "users",
     "attributes": {
       "name": "Carlos Méndez",
-      "email": "carlos@example.com",
-      "created_at": "2024-11-01T08:30:00Z",
-      "updated_at": "2025-02-20T14:15:00Z"
+      "email": "carlos@example.com"
     }
   },
   "meta": {
+    "request_id": "01HXYZ123ABC",
     "version": "v1",
-    "timestamp": "2025-02-24T10:00:00Z"
+    "timestamp": "2025-02-24T10:00:00+00:00"
+  }
+}
+```
+
+### Success — with extra meta (e.g. auth token)
+
+```json
+{
+  "data": {
+    "id": "01kn38s0cv0edq25et3vyrxd7s",
+    "type": "users",
+    "attributes": {
+      "name": "Carlos Méndez",
+      "email": "carlos@example.com"
+    }
+  },
+  "meta": {
+    "request_id": "01HXYZ123ABC",
+    "version": "v1",
+    "timestamp": "2025-02-24T10:00:00+00:00",
+    "token": "1|abc123..."
   }
 }
 ```
@@ -132,11 +150,9 @@ All responses follow a consistent structure inspired by JSON:API.
 
 ```json
 {
-  "success": true,
-  "message": "Users retrieved successfully",
   "data": [
     {
-      "id": "01HXYZ123ABC",
+      "id": "01kn38s0cv0edq25et3vyrxd7s",
       "type": "users",
       "attributes": {
         "name": "Carlos Méndez",
@@ -145,8 +161,9 @@ All responses follow a consistent structure inspired by JSON:API.
     }
   ],
   "meta": {
+    "request_id": "01HXYZ123ABC",
     "version": "v1",
-    "timestamp": "2025-02-24T10:00:00Z",
+    "timestamp": "2025-02-24T10:00:00+00:00",
     "pagination": {
       "total": 100,
       "per_page": 15,
@@ -155,13 +172,6 @@ All responses follow a consistent structure inspired by JSON:API.
       "from": 1,
       "to": 15
     }
-  },
-  "links": {
-    "self": "...",
-    "first": "...",
-    "prev": null,
-    "next": "...",
-    "last": "..."
   }
 }
 ```
@@ -170,15 +180,41 @@ All responses follow a consistent structure inspired by JSON:API.
 
 ```json
 {
-  "success": false,
-  "message": "Error description",
-  "error": {
-    "code": "ERROR_CODE",
-    "detail": "Additional context"
-  },
+  "errors": [
+    {
+      "status": "404",
+      "code": "NOT_FOUND",
+      "title": "Not Found.",
+      "detail": "The requested resource was not found."
+    }
+  ],
   "meta": {
+    "request_id": "01HXYZ123ABC",
     "version": "v1",
-    "timestamp": "2025-02-24T10:00:00Z"
+    "timestamp": "2025-02-24T10:00:00+00:00"
+  }
+}
+```
+
+### Validation error
+
+```json
+{
+  "errors": [
+    {
+      "status": "422",
+      "code": "VALIDATION_ERROR",
+      "title": "The given data was invalid.",
+      "detail": "The email field is required.",
+      "source": {
+        "pointer": "/data/attributes/email"
+      }
+    }
+  ],
+  "meta": {
+    "request_id": "01HXYZ123ABC",
+    "version": "v1",
+    "timestamp": "2025-02-24T10:00:00+00:00"
   }
 }
 ```
@@ -254,10 +290,9 @@ public function __invoke(RegisterRequest $request, RegisterUserAction $action): 
     $result = $action->execute($request->toDto());
 
     return $this->success(
-        data: new UserResource($result['user']),
-        message: 'User registered successfully',
-        status: Response::HTTP_CREATED,
-        meta: ['token' => $result['token']]
+        new UserResource($result['user']),
+        Response::HTTP_CREATED,
+        ['token' => $result['token']],
     );
 }
 ```
@@ -315,7 +350,8 @@ Retry-After
 
 ## Middleware Included
 
-* `force.json`
+* `force.json` — forces `Accept: application/vnd.api+json` on every request
+* `api.version` — sets the API version in request attributes and `X-API-Version` response header
 * `auth:sanctum`
 
 Reusable and composable per route group.

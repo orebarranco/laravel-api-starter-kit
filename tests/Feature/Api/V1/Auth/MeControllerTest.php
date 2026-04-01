@@ -19,14 +19,13 @@ it('retrieves the authenticated user profile', function (): void {
     $response = $this->getJson($this->endpoint);
 
     $response->assertStatus(Response::HTTP_OK)
-        ->assertJsonPath('success', true)
-        ->assertJsonPath('message', __('User profile retrieved'))
-        ->assertJsonPath('data.id', $this->user->id)
+        ->assertJsonPath('data.type', 'users')
+        ->assertJsonPath('data.id', (string) $this->user->id)
         ->assertJsonPath('data.attributes.email', $this->user->email);
 });
 
 it('fails to retrieve profile if not authenticated', function (): void {
-    $response = $this->getJson($this->endpoint);
-
-    $response->assertStatus(Response::HTTP_UNAUTHORIZED);
+    $this->getJson($this->endpoint)
+        ->assertUnauthorized()
+        ->assertJsonPath('errors.0.code', 'UNAUTHENTICATED');
 });

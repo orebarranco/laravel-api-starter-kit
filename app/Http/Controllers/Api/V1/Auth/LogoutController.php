@@ -6,24 +6,18 @@ namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Actions\Auth\LogoutAction;
 use App\Models\User;
-use App\Traits\ApiResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 final class LogoutController
 {
-    use ApiResponse;
-
-    public function __invoke(Request $request, LogoutAction $logoutAction): JsonResponse
+    public function __invoke(Request $request, LogoutAction $logoutAction): Response
     {
         /** @var User $user */
         $user = $request->user();
 
         $logoutAction->execute($user);
 
-        return $this->success(
-            data: null,
-            message: 'Logged out successfully'
-        );
+        return response()->noContent();
     }
 }
