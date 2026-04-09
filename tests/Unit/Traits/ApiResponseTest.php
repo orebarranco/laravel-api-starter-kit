@@ -33,7 +33,13 @@ it('successCollection returns paginated response with JSON:API structure', funct
     $data = $response->getData(true);
 
     expect($response->status())->toBe(Response::HTTP_OK)
-        ->and($data)->toHaveKeys(['data', 'meta'])
+        ->and($data)->toHaveKeys(['data', 'links', 'meta'])
+        ->and($data['links'])->toMatchArray([
+            'first' => 'http://localhost/api/v1/users?page=1',
+            'last' => 'http://localhost/api/v1/users?page=4',
+            'prev' => null,
+            'next' => 'http://localhost/api/v1/users?page=2',
+        ])
         ->and($data['meta']['pagination'])->toMatchArray([
             'total' => 10,
             'per_page' => 3,

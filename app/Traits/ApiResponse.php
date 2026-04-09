@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Traits;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\JsonApi\AnonymousResourceCollection;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\JsonApi\JsonApiResource;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
