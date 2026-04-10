@@ -33,6 +33,15 @@ it('requires authentication', function (): void {
         ->assertJsonPath('errors.0.code', 'UNAUTHENTICATED');
 });
 
+it('requires a verified email', function (): void {
+    $unverifiedUser = User::factory()->unverified()->create();
+    Sanctum::actingAs($unverifiedUser);
+
+    $this->getJson($this->endpoint)
+        ->assertForbidden()
+        ->assertJsonPath('errors.0.code', 'EMAIL_NOT_VERIFIED');
+});
+
 it('can filter users by name', function (): void {
     User::factory()->create(['name' => 'Alice Smith']);
     User::factory()->create(['name' => 'Bob Jones']);

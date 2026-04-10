@@ -6,10 +6,12 @@ use App\Http\Controllers\Api\V1\Auth\LoginController;
 use App\Http\Controllers\Api\V1\Auth\LogoutController;
 use App\Http\Controllers\Api\V1\Auth\MeController;
 use App\Http\Controllers\Api\V1\Auth\RegisterController;
+use App\Http\Controllers\Api\V1\Auth\ResendEmailVerificationController;
+use App\Http\Controllers\Api\V1\Auth\VerifyEmailController;
 use App\Http\Controllers\Api\V1\Users\IndexController as UsersIndexController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('users')->name('users.')->group(function (): void {
+Route::middleware(['auth:sanctum', 'verified', 'throttle:api'])->prefix('users')->name('users.')->group(function (): void {
     Route::get('/', UsersIndexController::class)->name('index');
 });
 
@@ -22,5 +24,10 @@ Route::prefix('auth')->name('auth.')->group(function (): void {
     Route::middleware(['auth:sanctum', 'throttle:api'])->group(function (): void {
         Route::get('me', MeController::class)->name('me');
         Route::post('logout', LogoutController::class)->name('logout');
+        Route::post('email/resend', ResendEmailVerificationController::class)->name('verification.send');
     });
+
+    Route::get('email/verify/{id}/{hash}', VerifyEmailController::class)
+        ->middleware(['signed', 'throttle:auth'])
+        ->name('verification.verify');
 });

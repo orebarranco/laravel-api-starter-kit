@@ -7,6 +7,8 @@ namespace Tests\Unit\Actions\Auth;
 use App\Actions\Auth\RegisterUserAction;
 use App\DTOs\Auth\RegisterUserDTO;
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Hash;
 
 beforeEach(function (): void {
@@ -14,6 +16,8 @@ beforeEach(function (): void {
 });
 
 it('creates a user and returns user with a valid token', function (): void {
+    Event::fake();
+
     $userData = [
         'name' => 'John Doe',
         'email' => 'john@example.com',
@@ -32,14 +36,16 @@ it('creates a user and returns user with a valid token', function (): void {
         ->and($result['token'])->toBeString()->not->toBeEmpty()
         ->and($result['token'])->toMatch('/^\d+\|[\w\W]+$/');
 
-    $this->assertDatabaseHas('users', [
-        'email' => $userData['email'],
-    ]);
+    $this->assertDatabaseHas('users', ['email' => $userData['email']]);
 
     expect(Hash::check($userData['password'], $result['user']->password))->toBeTrue();
+
+    Event::assertDispatched(Registered::class, fn (Registered $e): bool => $e->user->email === $userData['email']);
 });
 
 it('persists user with all required attributes', function (): void {
+    Event::fake();
+
     $dto = new RegisterUserDTO(
         name: 'Jane Doe',
         email: 'jane@example.com',

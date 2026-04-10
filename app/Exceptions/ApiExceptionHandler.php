@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Exceptions;
 
+use App\Exceptions\Auth\EmailNotVerifiedException;
 use App\Exceptions\Auth\InvalidCredentialsException;
 use App\Traits\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -26,11 +28,13 @@ final class ApiExceptionHandler
         return match (true) {
             $e instanceof ValidationException => $this->handleValidation($e),
             $e instanceof InvalidCredentialsException => $this->handleInvalidCredentials($e),
+            $e instanceof EmailNotVerifiedException => $this->handleEmailNotVerified(),
             $e instanceof AuthenticationException => $this->handleAuthentication(),
             $e instanceof AuthorizationException => $this->handleAuthorization(),
             $e instanceof ModelNotFoundException,
             $e instanceof NotFoundHttpException => $this->handleNotFound(),
             $e instanceof TooManyRequestsHttpException => $this->handleThrottle(),
+            $e instanceof InvalidSignatureException => $this->handleInvalidSignature(),
             $e instanceof HttpException => $this->handleHttp($e),
             default => $this->handleGeneric($e),
         };
@@ -48,6 +52,16 @@ final class ApiExceptionHandler
             code: 'INVALID_CREDENTIALS',
             detail: 'The provided credentials are incorrect.',
             status: Response::HTTP_UNAUTHORIZED,
+        );
+    }
+
+    private function handleEmailNotVerified(): JsonResponse
+    {
+        return $this->error(
+            message: 'Email not verified.',
+            code: 'EMAIL_NOT_VERIFIED',
+            detail: 'You must verify your email address before accessing this resource.',
+            status: Response::HTTP_FORBIDDEN,
         );
     }
 
@@ -88,6 +102,16 @@ final class ApiExceptionHandler
             code: 'TOO_MANY_REQUESTS',
             detail: 'You have exceeded the request rate limit.',
             status: Response::HTTP_TOO_MANY_REQUESTS,
+        );
+    }
+
+    private function handleInvalidSignature(): JsonResponse
+    {
+        return $this->error(
+            message: 'Invalid signature.',
+            code: 'INVALID_SIGNATURE',
+            detail: 'The verification link is invalid or has expired.',
+            status: Response::HTTP_FORBIDDEN,
         );
     }
 
