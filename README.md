@@ -13,27 +13,25 @@ No frontend scaffolding. No Blade. Pure headless API.
 
 ## Core Philosophy
 
-* Thin Controllers
-* Business logic inside **Actions**
-* Custom lightweight DTOs (no external DTO packages)
-* Strict typing
-* Strict JSON:API compliant responses
-* Versioned APIs
+* Thin controllers — business logic lives in **Actions**
+* Typed DTOs hydrated from Form Requests via `toDto()`
+* Strict typing throughout (`declare(strict_types=1)`, `final` classes)
+* JSON:API compliant responses
+* Versioned APIs from day one
 
 ---
 
 ## Features
 
-* **API-Only Architecture**
-* **Action Pattern (Application Layer)**
 * Token authentication via Laravel Sanctum
-* API Versioning (URI-based)
-* Custom typed DTOs (`readonly` PHP classes)
-* JSON:API compliant resource objects via `JsonApiResource`
-* Standardized JSON:API response format (`application/vnd.api+json`)
-* Reusable middleware
-* Modern testing with Pest (100% coverage enforced)
-* Static analysis (PHPStan + Larastan)
+* Email verification with signed URLs
+* Rate limiting (per IP and per user)
+* API versioning (URI-based)
+* Custom `readonly` DTOs (no external packages)
+* JSON:API resource objects via `JsonApiResource`
+* Centralized exception handling
+* Pest with 100% coverage enforced
+* Static analysis via Larastan
 * Automated refactoring with Rector
 * Code formatting via Laravel Pint
 
@@ -56,8 +54,6 @@ cd laravel-api-starter-kit
 composer setup
 ```
 
-Run tests:
-
 ```bash
 composer test
 ```
@@ -66,32 +62,26 @@ composer test
 
 ## Authentication
 
-Authentication is powered by Laravel Sanctum using token-based authentication.
-
 Protected routes require:
 
 ```
 Authorization: Bearer {token}
 ```
 
-Supports:
-
-* Registration
-* Login
-* Logout
+| Endpoint | Method | Auth |
+|----------|--------|------|
+| `/api/v1/auth/register` | POST | — |
+| `/api/v1/auth/login` | POST | — |
+| `/api/v1/auth/logout` | POST | Bearer |
+| `/api/v1/auth/me` | GET | Bearer |
+| `/api/v1/auth/email/verify/{id}/{hash}` | GET | Signed URL |
+| `/api/v1/auth/email/resend` | POST | Bearer |
 
 ---
 
 ## API Versioning
 
-Default strategy: URI-based
-
-```
-/api/v1/...
-/api/v2/...
-```
-
-Each version contains:
+URI-based versioning. Each version is fully isolated:
 
 ```
 app/Http/Controllers/Api/V1/
@@ -103,119 +93,33 @@ routes/api/v1.php
 
 ## Response Format
 
-All responses follow the [JSON:API](https://jsonapi.org) specification (`Content-Type: application/vnd.api+json`).
+All responses use `Content-Type: application/vnd.api+json`.
 
-### Success — single resource
-
-```json
-{
-  "data": {
-    "id": "01kn38s0cv0edq25et3vyrxd7s",
-    "type": "users",
-    "attributes": {
-      "name": "Carlos Méndez",
-      "email": "carlos@example.com"
-    }
-  },
-  "meta": {
-    "request_id": "01HXYZ123ABC",
-    "version": "v1",
-    "timestamp": "2025-02-24T10:00:00+00:00"
-  }
-}
-```
-
-### Success — with extra meta (e.g. auth token)
+**Success**
 
 ```json
 {
   "data": {
     "id": "01kn38s0cv0edq25et3vyrxd7s",
     "type": "users",
-    "attributes": {
-      "name": "Carlos Méndez",
-      "email": "carlos@example.com"
-    }
+    "attributes": { "name": "Carlos Méndez", "email": "carlos@example.com" }
   },
-  "meta": {
-    "request_id": "01HXYZ123ABC",
-    "version": "v1",
-    "timestamp": "2025-02-24T10:00:00+00:00",
-    "token": "1|abc123..."
-  }
+  "meta": { "request_id": "...", "version": "v1", "timestamp": "..." }
 }
 ```
 
-### Success — collection (paginated)
+**Error**
 
 ```json
 {
-  "data": [
-    {
-      "id": "01kn38s0cv0edq25et3vyrxd7s",
-      "type": "users",
-      "attributes": {
-        "name": "Carlos Méndez",
-        "email": "carlos@example.com"
-      }
-    }
-  ],
-  "meta": {
-    "request_id": "01HXYZ123ABC",
-    "version": "v1",
-    "timestamp": "2025-02-24T10:00:00+00:00",
-    "pagination": {
-      "total": 100,
-      "per_page": 15,
-      "current_page": 1,
-      "last_page": 7,
-      "from": 1,
-      "to": 15
-    }
-  }
-}
-```
-
-### Error
-
-```json
-{
-  "errors": [
-    {
-      "status": "404",
-      "code": "NOT_FOUND",
-      "title": "Not Found.",
-      "detail": "The requested resource was not found."
-    }
-  ],
-  "meta": {
-    "request_id": "01HXYZ123ABC",
-    "version": "v1",
-    "timestamp": "2025-02-24T10:00:00+00:00"
-  }
-}
-```
-
-### Validation error
-
-```json
-{
-  "errors": [
-    {
-      "status": "422",
-      "code": "VALIDATION_ERROR",
-      "title": "The given data was invalid.",
-      "detail": "The email field is required.",
-      "source": {
-        "pointer": "/data/attributes/email"
-      }
-    }
-  ],
-  "meta": {
-    "request_id": "01HXYZ123ABC",
-    "version": "v1",
-    "timestamp": "2025-02-24T10:00:00+00:00"
-  }
+  "errors": [{
+    "status": "422",
+    "code": "VALIDATION_ERROR",
+    "title": "The given data was invalid.",
+    "detail": "The email field is required.",
+    "source": { "pointer": "/data/attributes/email" }
+  }],
+  "meta": { "request_id": "...", "version": "v1", "timestamp": "..." }
 }
 ```
 
@@ -225,186 +129,104 @@ All responses follow the [JSON:API](https://jsonapi.org) specification (`Content
 
 ```
 app/
-├── Actions/                # Use cases (application layer)
-├── DTOs/                   # Custom typed DTOs
+├── Actions/                # Single-purpose use cases
+├── DTOs/                   # Immutable readonly DTOs
+├── Exceptions/             # Typed exceptions + centralized handler
 ├── Http/
-│   ├── Controllers/Api/    # Versioned controllers
-│   ├── Requests/Api/       # Validation + DTO hydration
-│   └── Resources/Api/      # JSON:API resource classes
+│   ├── Controllers/Api/    # Versioned, single-action controllers
+│   ├── Middleware/         # ForceJsonResponse, EnsureEmailIsVerified
+│   ├── Requests/Api/       # Validation + toDto()
+│   └── Resources/Api/      # JSON:API resources
 ├── Models/
-├── Providers/
-├── Traits/                 # ApiResponse
-└── Exceptions/
+├── Providers/              # AppServiceProvider (rate limiting, email verification)
+└── Traits/                 # ApiResponse
 
 routes/
-├── api.php                 # Main entry point, version grouping
-└── api/
-    └── v1.php
-
-tests/
-├── Feature/Api/V1/
-└── Unit/
-```
-
----
-
-## Custom DTO Strategy
-
-DTOs are simple, immutable (`readonly`) PHP classes hydrated directly from Form Requests via `toDto()`.
-
-No external packages required.
-
-Example:
-
-```php
-declare(strict_types=1);
-
-final readonly class RegisterUserDTO
-{
-    public function __construct(
-        public string $name,
-        public string $email,
-        public string $password,
-    ) {}
-}
-```
-
-Form Request hydration:
-
-```php
-public function toDto(): RegisterUserDTO
-{
-    return new RegisterUserDTO(
-        name: $this->string('name')->toString(),
-        email: $this->string('email')->toString(),
-        password: $this->string('password')->toString(),
-    );
-}
-```
-
-Controller usage:
-
-```php
-public function __invoke(RegisterRequest $request, RegisterUserAction $action): JsonResponse
-{
-    $result = $action->execute($request->toDto());
-
-    return $this->success(
-        new UserResource($result['user']),
-        Response::HTTP_CREATED,
-        ['token' => $result['token']],
-    );
-}
+├── api.php                 # Version grouping
+└── api/v1.php
 ```
 
 ---
 
 ## Action Pattern
 
-Every business operation lives in an Action.
+Controllers delegate to single-purpose Action classes:
 
 ```php
-final class RegisterUserAction
+// Controller
+public function __invoke(RegisterRequest $request, RegisterUserAction $action): JsonResponse
 {
-    /**
-     * @return array{user: User, token: string}
-     */
-    public function execute(RegisterUserDTO $data): array
-    {
-        $user = User::query()->create([
-            'name' => $data->name,
-            'email' => $data->email,
-            'password' => Hash::make($data->password),
-        ]);
+    $result = $action->execute($request->toDto());
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+    return $this->success(new UserResource($result['user']), Response::HTTP_CREATED, [
+        'token' => $result['token'],
+    ]);
+}
 
-        return ['user' => $user, 'token' => $token];
-    }
+// Action
+public function execute(RegisterUserDTO $data): array
+{
+    $user = User::query()->create([...]);
+
+    event(new Registered($user));
+
+    return ['user' => $user, 'token' => $user->createToken('auth_token')->plainTextToken];
 }
 ```
-
-Controllers delegate. Actions execute business logic.
 
 ---
 
 ## Rate Limiting
 
-Defined in `AppServiceProvider`.
+| Limiter | Routes | Limit |
+|---------|--------|-------|
+| `auth` | register, login, email verify | 5 req/min per IP |
+| `api` | all authenticated endpoints | 120 req/min per user · 60 req/min per IP |
 
-Examples:
+---
 
-* 60/min default
-* 5/min for authentication
-* 120/min for authenticated users
+## Email Verification
 
-Headers returned:
+Sent automatically on registration via the `Registered` event.
 
 ```
-X-RateLimit-Limit
-X-RateLimit-Remaining
-Retry-After
+GET  /auth/email/verify/{id}/{hash}   — no auth required (signed URL)
+POST /auth/email/resend               — requires Bearer token
 ```
 
 ---
 
-## Middleware Included
+## Middleware
 
-* `force.json` — forces `Accept: application/vnd.api+json` on every request
-* `api.version` — sets the API version in request attributes and `X-API-Version` response header
-* `auth:sanctum`
-
-Reusable and composable per route group.
+* `force.json` — enforces `Accept: application/vnd.api+json`
+* `api.version` — sets `X-API-Version` response header
+* `verified` — requires verified email → `EMAIL_NOT_VERIFIED` (403)
 
 ---
 
 ## Testing
 
-Powered by Pest with 100% code coverage enforced.
-
 ```bash
-composer test
+composer test          # lint + static analysis + coverage
+composer test:unit     # unit tests only
 ```
 
-Structure:
-
-```
-tests/
-├── Feature/Api/V1/
-└── Unit/
-    ├── Actions/
-    ├── Traits/
-    └── Models/
-```
+Powered by Pest 4 with 100% coverage enforced. Feature and unit tests for all controllers, actions, middleware, and exception handling.
 
 ---
 
 ## Code Quality
 
-Tools included:
-
-* PHPStan (max level via Larastan)
-* Rector
-* Laravel Pint
-
-Composer scripts:
-
 ```bash
-composer lint      # Rector + Pint
-composer test      # Full suite: lint, types, coverage
+composer lint          # Rector + Pint
 ```
 
-Strict rules applied:
-
-* `declare(strict_types=1)`
-* Final classes by default
-* Typed properties
-* 100% test coverage
+* PHPStan level max via Larastan
+* Rector for automated refactoring
+* Laravel Pint for code style
 
 ---
 
 ## License
 
 MIT License
-
----
