@@ -25,6 +25,7 @@ No frontend scaffolding. No Blade. Pure headless API.
 
 * Token authentication via Laravel Sanctum
 * Email verification with signed URLs
+* Password reset via email
 * Rate limiting (per IP and per user)
 * API versioning (URI-based)
 * Custom `readonly` DTOs (no external packages)
@@ -74,6 +75,8 @@ Authorization: Bearer {token}
 | `/api/v1/auth/login` | POST | — |
 | `/api/v1/auth/logout` | POST | Bearer |
 | `/api/v1/auth/me` | GET | Bearer |
+| `/api/v1/auth/forgot-password` | POST | — |
+| `/api/v1/auth/reset-password` | POST | — |
 | `/api/v1/auth/email/verify/{id}/{hash}` | GET | Signed URL |
 | `/api/v1/auth/email/resend` | POST | Bearer |
 
@@ -138,7 +141,7 @@ app/
 │   ├── Requests/Api/       # Validation + toDto()
 │   └── Resources/Api/      # JSON:API resources
 ├── Models/
-├── Providers/              # AppServiceProvider (rate limiting, email verification)
+├── Providers/              # AppServiceProvider (rate limiting, email verification, password reset)
 └── Traits/                 # ApiResponse
 
 routes/
@@ -180,7 +183,7 @@ public function execute(RegisterUserDTO $data): array
 
 | Limiter | Routes | Limit |
 |---------|--------|-------|
-| `auth` | register, login, email verify | 5 req/min per IP |
+| `auth` | register, login, forgot-password, reset-password, email verify | 5 req/min per IP |
 | `api` | all authenticated endpoints | 120 req/min per user · 60 req/min per IP |
 
 ---
@@ -193,6 +196,17 @@ Sent automatically on registration via the `Registered` event.
 GET  /auth/email/verify/{id}/{hash}   — no auth required (signed URL)
 POST /auth/email/resend               — requires Bearer token
 ```
+
+---
+
+## Password Reset
+
+```
+POST /auth/forgot-password   — sends reset link to email (no auth required)
+POST /auth/reset-password    — resets password and invalidates all tokens (no auth required)
+```
+
+The reset link points to `FRONTEND_URL/reset-password?token=...&email=...`. Configure `FRONTEND_URL` in your `.env`.
 
 ---
 

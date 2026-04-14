@@ -59,6 +59,15 @@ trait ApiResponse
             ->setStatusCode($status);
     }
 
+    protected function noData(int $status = Response::HTTP_OK): JsonResponse
+    {
+        return response()->json(
+            ['meta' => $this->baseMeta()],
+            $status,
+            ['Content-Type' => 'application/vnd.api+json'],
+        );
+    }
+
     protected function error(string $message, string $code, string $detail = '', int $status = Response::HTTP_BAD_REQUEST): JsonResponse
     {
         return response()->json([

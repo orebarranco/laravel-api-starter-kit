@@ -6,6 +6,7 @@ namespace App\Exceptions;
 
 use App\Exceptions\Auth\EmailNotVerifiedException;
 use App\Exceptions\Auth\InvalidCredentialsException;
+use App\Exceptions\Auth\InvalidPasswordResetTokenException;
 use App\Traits\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
@@ -28,6 +29,7 @@ final class ApiExceptionHandler
         return match (true) {
             $e instanceof ValidationException => $this->handleValidation($e),
             $e instanceof InvalidCredentialsException => $this->handleInvalidCredentials($e),
+            $e instanceof InvalidPasswordResetTokenException => $this->handleInvalidPasswordResetToken($e),
             $e instanceof EmailNotVerifiedException => $this->handleEmailNotVerified(),
             $e instanceof AuthenticationException => $this->handleAuthentication(),
             $e instanceof AuthorizationException => $this->handleAuthorization(),
@@ -52,6 +54,16 @@ final class ApiExceptionHandler
             code: 'INVALID_CREDENTIALS',
             detail: 'The provided credentials are incorrect.',
             status: Response::HTTP_UNAUTHORIZED,
+        );
+    }
+
+    private function handleInvalidPasswordResetToken(InvalidPasswordResetTokenException $e): JsonResponse
+    {
+        return $this->error(
+            message: $e->getMessage(),
+            code: 'INVALID_PASSWORD_RESET_TOKEN',
+            detail: 'This password reset token is invalid or has expired.',
+            status: Response::HTTP_UNPROCESSABLE_ENTITY,
         );
     }
 

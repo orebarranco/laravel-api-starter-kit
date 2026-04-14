@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Models\User;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -36,6 +37,17 @@ final class AppServiceProvider extends ServiceProvider
 
         $this->configureRateLimiting();
         $this->configureEmailVerification();
+        $this->configurePasswordReset();
+    }
+
+    private function configurePasswordReset(): void
+    {
+        ResetPassword::createUrlUsing(function (mixed $user, string $token): string {
+            /** @var User $user */
+            $baseUrl = mb_rtrim(Config::string('app.frontend_url', Config::string('app.url')), '/');
+
+            return $baseUrl.'/reset-password?token='.urlencode($token).'&email='.urlencode($user->getEmailForPasswordReset());
+        });
     }
 
     private function configureEmailVerification(): void
