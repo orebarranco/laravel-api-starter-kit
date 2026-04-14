@@ -48,10 +48,23 @@ No frontend scaffolding. No Blade. Pure headless API.
 
 ## Quick Start
 
-```bash
-git clone https://github.com/orebarranco/laravel-api-starter-kit.git
-cd laravel-api-starter-kit
+**Via the Laravel installer (recommended):**
 
+```bash
+laravel new myapp --using=orebarranco/laravel-api-starter-kit
+```
+
+**Via Composer:**
+
+```bash
+composer create-project orebarranco/laravel-api-starter-kit myapp
+```
+
+**Via Git:**
+
+```bash
+git clone https://github.com/orebarranco/laravel-api-starter-kit.git myapp
+cd myapp
 composer setup
 ```
 

@@ -1,11 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "orebarranco/laravel-api-starter-kit",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "Production-ready API-only starter kit for Laravel 13 with Sanctum auth, JSON:API responses, DTOs, Actions, and 100% test coverage.",
     "keywords": [
         "laravel",
-        "framework"
+        "api",
+        "starter-kit",
+        "sanctum",
+        "rest-api",
+        "json-api"
     ],
     "license": "MIT",
     "require": {
