@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Rector\Caching\ValueObject\Storage\FileCacheStorage;
 use Rector\CodingStyle\Rector\ClassMethod\MakeInheritedMethodVisibilitySameAsParentRector;
+use Rector\CodingStyle\Rector\Encapsed\EncapsedStringsToSprintfRector;
 use Rector\Config\RectorConfig;
 use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use RectorLaravel\Rector\Class_\FillablePropertyToFillableAttributeRector;
@@ -46,6 +47,14 @@ return RectorConfig::configure()
         MakeInheritedMethodVisibilitySameAsParentRector::class,
         FillablePropertyToFillableAttributeRector::class,
         HiddenPropertyToHiddenAttributeRector::class,
+        // A style opinion from the codingStyle set, not a correctness rule.
+        // It moves the placeholder away from its value: the `%s` lands in one
+        // place and the variable in another, so reading the line means
+        // counting positions, and a swapped argument stays a perfectly valid
+        // string that no analyser flags. sprintf still earns its place for
+        // real formatting -- padding, precision, a reused format constant --
+        // chosen by hand rather than applied wholesale.
+        EncapsedStringsToSprintfRector::class,
     ])
     ->withPreparedSets(
         deadCode: true,
