@@ -10,6 +10,8 @@ No frontend scaffolding. No Blade. Pure headless API.
 [![Laravel Version](https://img.shields.io/badge/Laravel-13.x-red)](https://laravel.com)
 [![License](https://img.shields.io/github/license/orebarranco/laravel-api-starter-kit)](LICENSE)
 
+![The untyped array stops at the Form Request: validation hands a readonly DTO to the Action, and the controller never touches a key](art/el-array-muere-en-la-frontera.svg)
+
 ---
 
 ## Core Philosophy
