@@ -5,9 +5,10 @@ Designed for scalable backends, mobile apps, SPAs, SaaS platforms, and microserv
 
 No frontend scaffolding. No Blade. Pure headless API.
 
+[![CI](https://github.com/orebarranco/laravel-api-starter-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/orebarranco/laravel-api-starter-kit/actions/workflows/ci.yml)
 [![PHP Version](https://img.shields.io/badge/PHP-8.4%2B-blue)](https://php.net)
 [![Laravel Version](https://img.shields.io/badge/Laravel-13.x-red)](https://laravel.com)
-[![License](https://img.shields.io/badge/License-MIT-green)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/github/license/orebarranco/laravel-api-starter-kit)](LICENSE)
 
 ---
 
@@ -254,6 +255,14 @@ composer lint          # Rector + Pint
 
 ---
 
+## Contributing
+
+The workflow — branches, commits, Pull Requests and the quality gates that must
+be green before a merge — is in [CONTRIBUTING.md](CONTRIBUTING.md). What changed
+in each version is in [CHANGELOG.md](CHANGELOG.md).
+
+---
+
 ## License
 
-MIT License
+MIT. See [LICENSE](LICENSE).
