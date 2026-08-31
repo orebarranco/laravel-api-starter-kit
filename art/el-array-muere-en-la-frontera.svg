@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="The untyped array stops at the Form Request: validation hands a readonly DTO to the Action, and the controller never touches a key">
+  <rect width="1200" height="630" fill="#11141a"/>
+
+  <text x="60" y="88" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="40" font-weight="700" fill="#f2f5f9">The array dies at the boundary</text>
+  <text x="60" y="130" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="22" fill="#8b97a8">Validation hands over a typed DTO. Nothing downstream sees a key.</text>
+
+  <g>
+    <rect x="60" y="176" width="510" height="308" rx="10" fill="#171b22" stroke="#262c36"/>
+    <text x="86" y="212" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#f0b429">FORM REQUEST</text>
+    <text xml:space="preserve" x="86" y="238" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#6b7688">RegisterRequest.php</text>
+    <rect x="60" y="262" width="510" height="176" fill="#f0b429" opacity="0.07"/>
+    <rect x="60" y="262" width="3" height="176" fill="#f0b429"/>
+    <text xml:space="preserve" x="86" y="290" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9"><tspan fill="#ff7b72">public function</tspan> <tspan fill="#d2a8ff">toDto</tspan>(): <tspan fill="#79c0ff">RegisterUserDTO</tspan></text>
+    <text xml:space="preserve" x="86" y="316" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">{</text>
+    <text xml:space="preserve" x="86" y="342" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">    <tspan fill="#ff7b72">return new</tspan> <tspan fill="#79c0ff">RegisterUserDTO</tspan>(</text>
+    <text xml:space="preserve" x="86" y="368" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">        name: <tspan fill="#ffa657">$this</tspan>-&gt;<tspan fill="#d2a8ff">string</tspan>(<tspan fill="#a5d6ff">'name'</tspan>)-&gt;<tspan fill="#d2a8ff">toString</tspan>(),</text>
+    <text xml:space="preserve" x="86" y="394" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#6b7688">        <tspan fill="#c9d1d9">email:</tspan> ...  <tspan fill="#c9d1d9">password:</tspan> ...</text>
+    <text xml:space="preserve" x="86" y="428" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">    );</text>
+    <text x="86" y="464" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" fill="#6b7688">the last place a string key appears</text>
+  </g>
+
+  <g>
+    <rect x="630" y="176" width="510" height="308" rx="10" fill="#171b22" stroke="#262c36"/>
+    <text x="656" y="212" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="17" font-weight="600" fill="#58a6ff">CONTROLLER</text>
+    <text xml:space="preserve" x="656" y="238" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#6b7688">RegisterController.php</text>
+    <rect x="630" y="262" width="510" height="176" fill="#58a6ff" opacity="0.07"/>
+    <rect x="630" y="262" width="3" height="176" fill="#58a6ff"/>
+    <text xml:space="preserve" x="656" y="290" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9"><tspan fill="#ff7b72">public function</tspan> <tspan fill="#d2a8ff">__invoke</tspan>(</text>
+    <text xml:space="preserve" x="656" y="316" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">    <tspan fill="#79c0ff">RegisterRequest</tspan> <tspan fill="#ffa657">$request</tspan>,</text>
+    <text xml:space="preserve" x="656" y="342" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">    <tspan fill="#79c0ff">RegisterUserAction</tspan> <tspan fill="#ffa657">$action</tspan>,</text>
+    <text xml:space="preserve" x="656" y="368" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">): <tspan fill="#79c0ff">JsonResponse</tspan> {</text>
+    <text xml:space="preserve" x="656" y="394" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">    <tspan fill="#ffa657">$result</tspan> = <tspan fill="#ffa657">$action</tspan>-&gt;<tspan fill="#d2a8ff">execute</tspan>(<tspan fill="#ffa657">$request</tspan>-&gt;<tspan fill="#d2a8ff">toDto</tspan>());</text>
+    <text xml:space="preserve" x="656" y="428" font-family="JetBrains Mono, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#c9d1d9">}</text>
+    <text x="656" y="464" font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="15" fill="#6b7688">two lines, no business logic, nothing to test twice</text>
+  </g>
+
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="16">
+    <text x="60" y="542" fill="#6b7688">FormRequest</text>
+    <text x="175" y="542" fill="#3d4653">→</text>
+    <text x="203" y="542" fill="#8b97a8">readonly DTO</text>
+    <text x="320" y="542" fill="#3d4653">→</text>
+    <text x="348" y="542" fill="#8b97a8">Action</text>
+    <text x="415" y="542" fill="#3d4653">→</text>
+    <text x="443" y="542" fill="#8b97a8">JsonApiResource</text>
+    <text x="60" y="578" fill="#4c5666" font-size="15">Laravel 13 · PHP 8.4 · Sanctum · JSON:API · Pest at 100% coverage · Larastan at max level</text>
+  </g>
+</svg>
